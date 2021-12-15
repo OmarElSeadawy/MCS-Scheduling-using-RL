@@ -1,0 +1,24 @@
+Total Load : 0.6
+Lo Percentage : 0.8
+Job Density : 5
+
+Time Wasted Completed
+[-11.31659716 -13.07083548 -13.44942149 -13.3283855  -12.9959432 ]
+
+Total Jobs 
+[28.1289 28.1289 28.1289 28.1289 28.1289]
+
+Total Jobs Completed
+[26.1226 25.9473 25.7613 25.5444 25.2863]
+
+Total Hi Criticality Jobs
+[5.0591 5.0591 5.0591 5.0591 5.0591]
+
+Total Hi Criticality Jobs Completed
+[4.8255 4.8043 4.7875 4.7683 4.7439]
+
+Total Low Criticality Jobs 
+[23.0698 23.0698 23.0698 23.0698 23.0698]
+
+Total Low Criticality Jobs Completed
+[21.2971 21.143  20.9738 20.7761 20.5424]
