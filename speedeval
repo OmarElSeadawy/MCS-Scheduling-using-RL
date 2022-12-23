@@ -1,0 +1,212 @@
+import ray
+import pickle
+from environment_generator import MCOnlineNewEnv,MCOnlineLatestTestEnv,MCOnlineTestEnv,MCOnlineLatestTestEnvPre
+# from ray.rllib.agents.dqn import ApexTrainer
+from ray.tune.registry import register_env
+from ray.rllib.algorithms.apex_dqn import ApexDQN as ApexTrainer
+import numpy as np
+from gym.spaces import Box, MultiBinary, Discrete, Dict
+import ray.rllib.algorithms.ppo as ppo
+import ray.rllib.algorithms.dqn as dqn
+import ray.rllib.algorithms.dreamer as dreamer
+import ray.rllib.algorithms.marwil as marwil
+import ray.rllib.algorithms.simple_q as simpleq
+import ray.rllib.algorithms.ars as ars
+import matplotlib.pyplot as plt
+np.set_printoptions(suppress=True)
+
+
+import time
+
+# PPO_Checkpoint = '/home/omarelseadawy/ray_results/oldresults/PPO_MCOnlinePPO100_2022-11-12_02-18-20tlxes_b9/checkpoint_000451/'
+# DQN_Checkpoint = '/home/omarelseadawy/ray_results/oldresults/DQN_MCOnlineDQNOG100Jobs_2022-11-12_02-47-137qroehzg/checkpoint_000451/'
+# SIQ_Checkpoint = '/home/omarelseadawy/ray_results/SimpleQ_MCOnlineSimpleQ100_2022-11-12_03-01-42r9mymt5w/checkpoint_000451/'
+# ARS_Checkpoint = '/home/omarelseadawy/ray_results/oldresults/ARS_MCOnlineARS100_2022-11-12_10-04-38vdfvkho1/checkpoint_001451/'
+# APX_Checkpoint = '/home/omarelseadawy/ray_results/ApexDQN_2022-11-12_11-00-43/ApexDQN_MCOnlineCustom_7d687_00000_0_2022-11-12_11-00-44/checkpoint_000250/'
+# MAR_Checkpoint = '/home/omarelseadawy/ray_results/MARWIL_MCOnlineMARWIL100Jobs_2022-11-17_21-13-279s840s4m/checkpoint_000451/'
+
+## PREEMPT
+# APX_Checkpoint = '/home/omarelseadawy/ray_results/ApexDQNImportantPreempt/ApexDQN_MCOnlineNewRewardPreempt2_9ce0e_00000_0_2022-12-12_23-54-55/checkpoint_000050/'
+## NON PREEMPT
+APX_Checkpoint = '/home/omarelseadawy/ray_results/ApexDQNImportantNonPreempt3/ApexDQN_MCOnlineNewRewardNonPreempt3_bb3ba_00000_0_2022-12-12_19-02-16/checkpoint_000050/'
+## LATEST
+ARS_Checkpoint = '/home/omarelseadawy/ray_results/ARS_MCOnlineARSLatest_2022-12-16_03-25-09shp3juwq/checkpoint_000701/'
+DQN_Checkpoint = '/home/omarelseadawy/ray_results/DQN_MCOnlineDQNLatest_2022-12-15_19-06-52aorojp7o/checkpoint_000451/'
+PPO_Checkpoint = '/home/omarelseadawy/ray_results/PPO_MCOnlinePPOLatest2_2022-12-16_04-25-52ak9or1vb/checkpoint_000451/'
+ray.init()
+
+
+def testspeed(algorizm):
+    # if(algorizm == 0):
+    ALGORITHM = "PPO2"
+    print("Setting Up PPO Env")
+    register_env("OnlineEvaluationPPO", lambda env_config: MCOnlineLatestTestEnvPre())
+    ppoconfig = ppo.DEFAULT_CONFIG.copy()
+    arsenv = MCOnlineLatestTestEnvPre()
+    ppoconfig["num_gpus"]=0
+    ppoconfig["num_workers"]=4
+    ppoconfig["env"]="OnlineEvaluationPPO"
+    ppoagent = ppo.PPO(config=ppoconfig)
+    ppoagent.restore(PPO_Checkpoint)
+    # ppo_episode_reward = 0
+    # ppodone = False
+
+    # if(algorizm == 1):
+    # ALGORITHM = "DQN2"
+    # print("Setting Up DQN Env")
+    # register_env("OnlineEvaluationDQN", lambda env_config: MCOnlineLatestTestEnvPre())
+    # dqnconfig = dqn.DEFAULT_CONFIG.copy()
+    # arsenv = MCOnlineLatestTestEnvPre()
+    # dqnconfig["num_gpus"]=0
+    # dqnconfig["num_workers"]=4
+    # dqnconfig["env"]="OnlineEvaluationDQN"
+    # dqnagent = dqn.DQN(config=dqnconfig)
+    # dqnagent.restore(DQN_Checkpoint)
+    #
+    # if(algorizm == 2):
+    #     ALGORITHM = "MAR2"
+    #     print("Setting Up MARWIL Env")
+    #     register_env("OnlineEvaluationMAR", lambda env_config: MCOnlineLatestTestEnv())
+    #     marwilconfig = marwil.DEFAULT_CONFIG.copy()
+    #     marwilagent = MCOnlineLatestTestEnv()
+    #     marwilconfig["num_gpus"]=0
+    #     marwilconfig["num_workers"]=4
+    #     marwilconfig["env"]="OnlineEvaluationMAR"
+    #     marwilagent = marwil.MARWIL(config=marwilconfig)
+    #     marwilagent.restore(MAR_Checkpoint)
+    #
+    # if(algorizm == 3):
+    # ALGORITHM = "ARS2"
+    # print("Setting Up ARS Env")
+    # register_env("OnlineEvaluationsARS", lambda env_config: MCOnlineLatestTestEnvPre())
+    # arsconfig = ars.DEFAULT_CONFIG.copy()
+    # arsenv = MCOnlineLatestTestEnvPre()
+    # arsconfig["num_gpus"]=0
+    # arsconfig["num_workers"]=4
+    # arsconfig["env"]="OnlineEvaluationsARS"
+    # arsagent = ars.ARS(config=arsconfig)
+    # arsagent.restore(ARS_Checkpoint)
+
+    # if(algorizm == 4):
+    #     ALGORITHM = "APX2"
+    #     print("Setting Up CustomApex Env")
+    #     register_env("OnlineEvaluationsAPX", lambda env_config: MCOnlineLatestTestEnvPre())
+    #     apxagent = ApexTrainer(config={"env": "OnlineEvaluationsAPX", "num_workers": 4, "num_gpus": 0})
+    #     apxagent.restore(APX_Checkpoint)
+
+    # print("Start Experiment")
+    # env = MCOnlineLatestTestEnvPre()
+    # state = env.reset()
+
+    ## Path for Testing Datasets
+    testdatapath = 'newpervsnonhunderd/dataset'
+    for datasetno in range(9):
+        print("Current Dataset No. " + str(datasetno))
+        with open(testdatapath+str(datasetno)+'metadata.pickle', 'rb') as metafile:
+            metadata = pickle.load(metafile)
+        # print("Total Load : ", metadata[0])
+        # print("Lo Percentage : ", metadata[1])
+        # print("Job Density : ", metadata[2])
+
+        ## Loading Dataset metadata from pickled file and writing to results file
+        # with open("Results/"+ALGORITHM+"results"+str(datasetno)+".txt", "w+") as resultsfile:
+        #     resultsfile.write("Total Load : " + str(metadata[0]) + '\n')
+        #     resultsfile.write("Lo Percentage : " + str(metadata[1]) + '\n')
+        #     resultsfile.write("Job Density : " + str(metadata[2]) + '\n')
+
+        ## Variables in monitoring and analysing results
+        accum = []
+        NumberofJobs = 100
+        Experiments = 100
+        Xaxis = 1
+
+        HC_jobs_completed = np.zeros((Experiments, Xaxis))
+        HC_jobs = np.zeros((Experiments, Xaxis))
+        LC_jobs_completed = np.zeros((Experiments, Xaxis))
+        LC_jobs = np.zeros((Experiments, Xaxis))
+        total_jobs_completed = np.zeros((Experiments, Xaxis))
+        total_jobs = np.zeros((Experiments, Xaxis))
+        time_wasted = np.zeros((Experiments, Xaxis))
+
+        workload_filtered_arr = []
+        min_speed_arr = []
+        jobnumber_arr = []
+        ## Loading Dataset workload instances from pickled file for testing
+        with open(testdatapath + str(datasetno) + '.pickle', 'rb') as datafile:
+            while 1:
+                try:
+                    workloadinstance = pickle.load(datafile)
+                    workload_filtered_arr.append(workloadinstance[0])
+                    min_speed_arr.append(workloadinstance[1])
+                    jobnumber_arr.append(workloadinstance[2])
+                except EOFError:
+                    break
+        # datafile.close()
+        # print("LOADED DATA SET SUCCESSFULLY")
+        # print(len(workload_filtered_arr))
+        # print(min_speed_arr[0])
+        # print(jobnumber_arr[0])
+        for i in range(Xaxis):
+            print(i)
+            degradation_threshold = 0.5
+            # print("Experiment AT DEGRADATION CHANCE = ", degradation_threshold)
+            st = time.time()
+            perrunst = 0
+            for j in range(Experiments):
+                min_speed = min_speed_arr[j]
+                jobnumber = jobnumber_arr[j]
+                # if(j % 100 == 0):
+                # print("EXPERIMENT NO: ", j)
+                workload_filtered = workload_filtered_arr[j]
+
+                state = arsenv.reset()
+                arsenv.degradation_threshold = degradation_threshold
+                arsenv.lowest_speed = min_speed
+
+                newworkload = np.zeros((NumberofJobs, 9))
+                newworkload[:workload_filtered.size // 6, :6] = workload_filtered
+                newworkload[workload_filtered.size // 6:, [0, 2, 3]] = 0
+                newworkload[workload_filtered.size // 6:, 1] = np.max(workload_filtered[:, 1])
+                newworkload[workload_filtered.size // 6:, 8] = 1
+                newworkload = np.abs(newworkload)
+                arsenv.workload = newworkload
+                arsenv.updateBuffer()
+                arsenv.degradationHappens()
+
+                total_jobs[j, i] = len(arsenv.workload)
+                testst=time.time()
+                # if (algorizm == 0):
+                action = ppoagent.compute_single_action(state)
+                # if (algorizm == 1):
+                # action = dqnagent.compute_single_action(state)
+                # if (algorizm == 2):
+                #     action = marwilagent.compute_single_action(state)
+                # if (algorizm == 3):
+                # action = arsagent.compute_single_action(state)
+                # if (algorizm == 4):
+                #     action = apxagent.compute_single_action(state)
+
+                state, reward, done, info = arsenv.step(action)
+
+                while (info['done'] == False):
+                    # if (algorizm == 0):
+                    action = ppoagent.compute_single_action(state)
+                    # if (algorizm == 1):
+                    # action = dqnagent.compute_single_action(state)
+                    # if (algorizm == 2):
+                    #     action = marwilagent.compute_single_action(state)
+                    # if (algorizm == 3):
+                    # action = arsagent.compute_single_action(state)
+                    # if (algorizm == 4):
+                        # action = apxagent.compute_single_action(state)
+                    state, reward, done, info = arsenv.step(action)
+                endst =time.time()
+                test_elapsed = endst - testst
+                perrunst += test_elapsed
+
+            et = time.time()
+            elapsed_time = et - st
+            print('Execution time:', elapsed_time, 'seconds')
+            print('Execution time computation only :', perrunst, 'seconds')
+
+testspeed(3) ## Test depending on algorithm
