@@ -63,13 +63,16 @@ def check_speed(speed,workload,HiPrioLen):
             if(curr_min_index != -1):
                 toSchedule = curr_min_index
                 workload[toSchedule,4] = 1
-                t += workload[toSchedule,2]
+                t += np.ceil(workload[toSchedule,2])
                 new_array = np.concatenate((new_array,workload[toSchedule,:]))
             else:
-                t+= workload[np.argmin(workload[:,0]),0]
+                t+= np.ceil(workload[np.argmin(workload[:,0]),0])
 
     new_array.resize((len(new_array)//6,6))
     new_array=new_array[:,:6]
+    # print("HI PRIO : ", HiPrioLen)
+    # print("neew arr :", len(new_array))
+
     if(HiPrioLen == len(new_array)):
         return True
     else:
@@ -82,7 +85,7 @@ def filter_dataset(num_jobs, total_load, lo_per, job_density):
     workload = np.zeros((num_jobs, 6))
     workload[:, :4] = create_workload(num_jobs, total_load, lo_per, job_density)
 
-    scaling_step = 0.2
+    scaling_step = 0.1
     for row in workload:
         row[0] = (math.modf(row[0])[1]*(1/scaling_step)) + Discretize(scaling_step, math.modf(row[0])[0])
         row[1] = (math.modf(row[1])[1]*(1/scaling_step)) + Discretize(scaling_step, math.modf(row[1])[0])
@@ -94,6 +97,7 @@ def filter_dataset(num_jobs, total_load, lo_per, job_density):
     t += workload[idx,2]                                                   ## Move time step to end of chosen job (No preemption)
     new_array=workload[idx,:]                                              ##New array of jobs that are scheduled properly
 
+    # print("HERE 1")
     while(len(workload) >= 1):
         workload[np.where((workload[:,2]+t) > workload[:,1]),5]=1              ##Mark all jobs that are starved (Their WCET is not enough to complete)
         # workload[np.where(workload[:,1] < t) ,5] = 1                           ##Mark all jobs with deadlines that already passed
@@ -121,13 +125,16 @@ def filter_dataset(num_jobs, total_load, lo_per, job_density):
     for i,v in enumerate(new_array):
         new_array[i][4] = v[2] ## Remaining Time
         new_array[i][5] = v[1] - v[4] ## Laxity
+    # print(len(new_array))
     return new_array
 
 
 ## This function is called to generate the set of jobs J with its respective minimum speed
 def generateData(total_load,lo_per,job_density,job_num,threshold):
 
+    # print("Generating Workload")
     workload_filtered = filter_dataset(job_num, total_load, lo_per,job_density)
+    # print("Generated Workload")
     while(True):
         curr_min_speed = 2
         if len(workload_filtered) >= job_num*threshold:
@@ -142,4 +149,5 @@ def generateData(total_load,lo_per,job_density,job_num,threshold):
         if(curr_min_speed <= 1):
             break
         workload_filtered = filter_dataset(job_num, total_load, lo_per,job_density)
+    # print("Generated done with speed")
     return workload_filtered,curr_min_speed
